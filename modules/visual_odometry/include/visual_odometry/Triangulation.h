@@ -16,6 +16,8 @@ namespace VO
         Triangulation(const std::string& calibPath);
         virtual ~Triangulation();
 
+        Frame triangulate(const cv::Mat& imageLeft, const cv::Mat& imageRight);
+
     private:
         Feature feature;
         cv::Mat projectionLeft;
