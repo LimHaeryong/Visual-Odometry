@@ -1,9 +1,11 @@
 #ifndef TRIANGULATION_H_
 #define TRIANGULATION_H_
 
+#include <cmath>
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <vector>
 
 #include "visual_odometry/Type.h"
 #include "visual_odometry/Feature.h"

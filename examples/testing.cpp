@@ -125,6 +125,12 @@ int main()
     // {
     //     std::cout << kp.response << std::endl;
     // }
+    cv::Mat cameraMatrix, rot, trans; 
+    cv::decomposeProjectionMatrix(PLeft, cameraMatrix, rot, trans);
+
+    std::cout << "cam : " << cameraMatrix << std::endl;
+    std::cout << "rot : " << rot << std::endl;
+    std::cout << "trans : " << trans << std::endl;
 
     return 0;
 }

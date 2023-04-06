@@ -5,22 +5,49 @@
 #include "visual_odometry/Type.h"
 #include "visual_odometry/Feature.h"
 #include "visual_odometry/Triangulation.h"
+#include "visual_odometry/MotionEstimation.h"
 
 int main()
 {
-    cv::Mat imageLeft1 = cv::imread("../resources/00/image_0/000000.png", cv::IMREAD_GRAYSCALE);
-    cv::Mat imageRight1 = cv::imread("../resources/00/image_1/000000.png", cv::IMREAD_GRAYSCALE);
+    cv::Mat imageLeft, imageRight;
 
-    cv::Mat imageLeft2 = cv::imread("../resources/00/image_0/000001.png", cv::IMREAD_GRAYSCALE);
-    cv::Mat imageRight2 = cv::imread("../resources/00/image_1/000001.png", cv::IMREAD_GRAYSCALE);
-
+    std::string imageLeftPath = "../resources/00/image_0/";
+    std::string imageRightPath = "../resources/00/image_1/";
     std::string calibPath = "../resources/00/calib.txt";
 
-    VO::Triangulation triangulation = VO::Triangulation(calibPath);
-    VO::Frame frame1 = triangulation.triangulate(imageLeft1, imageRight1);
-    VO::Frame frame2 = triangulation.triangulate(imageLeft2, imageRight2);
+    std::string frameCountStr;
+    std::string fileName;
+    uint frameCount = 0;
+    frameCountStr = std::to_string(frameCount);
+    fileName = std::string(6 - frameCountStr.length(), '0') + frameCountStr + ".png";
 
-    std::cout << frame1.points3D.size() << std::endl;
-    std::cout << frame2.points3D.size() << std::endl;
+    imageLeft = cv::imread(imageLeftPath + fileName, cv::IMREAD_GRAYSCALE);
+    imageRight = cv::imread(imageRightPath + fileName, cv::IMREAD_GRAYSCALE);
+    VO::Triangulation triangulation = VO::Triangulation(calibPath);
+    VO::MotionEstimation motionEstimation = VO::MotionEstimation(calibPath);
+
+    VO::Frame framePrev, frameCurrent;
+    framePrev = triangulation.triangulate(imageLeft, imageRight);
+
+    std::cout << framePrev.pose << std::endl;
+    while (true)
+    {
+        frameCountStr.clear();
+        fileName.clear();
+        frameCountStr = std::to_string(frameCount);
+        ++frameCount;
+        fileName = std::string(6 - frameCountStr.length(), '0') + frameCountStr + ".png";
+
+        imageLeft = cv::imread(imageLeftPath + fileName, cv::IMREAD_GRAYSCALE);
+        imageRight = cv::imread(imageRightPath + fileName, cv::IMREAD_GRAYSCALE);
+
+
+        frameCurrent = triangulation.triangulate(imageLeft, imageRight);
+
+        int ret = motionEstimation.motionEstimate(framePrev, frameCurrent);
+        std::cout << frameCurrent.pose << std::endl;
+        framePrev = frameCurrent;
+    }
+
     return 0;
 }

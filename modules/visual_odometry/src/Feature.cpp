@@ -5,10 +5,9 @@ namespace VO
 
     Feature::Feature()
     {
-        featureExtractor = cv::ORB::create();
+        featureExtractor = cv::ORB::create(1000);
         matcher = cv::BFMatcher::create(cv::NORM_HAMMING);
     }
-
     Feature::~Feature()
     {
     }

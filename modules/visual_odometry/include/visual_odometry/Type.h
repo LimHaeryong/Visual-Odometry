@@ -10,10 +10,11 @@ namespace VO
 {
     struct Frame
     {
-        std::vector<cv::Point2f> keyPoints;
+        std::vector<cv::Point2d> keyPoints;
         cv::Mat descriptors;
-        std::vector<cv::Point3f> points3D;
-        cv::Vec6f pose;
+        std::vector<cv::Point3d> points3D;
+        cv::Mat pose;
+        cv::Mat relativePose;
     };
 };
 
