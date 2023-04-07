@@ -76,7 +76,7 @@ namespace VO
             frame2.pose = frame1.relativePose.clone() * frame1.pose.clone();
             return -1;
         }
-
+        
         cv::Mat rotationMatrix;
         cv::Rodrigues(rvec, rotationMatrix);
         double trace = cv::trace(rotationMatrix.t())[0];
