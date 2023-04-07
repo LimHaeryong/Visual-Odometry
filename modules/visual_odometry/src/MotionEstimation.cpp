@@ -36,7 +36,7 @@ namespace VO
 
     int MotionEstimation::motionEstimate(const Frame &frame1, Frame &frame2)
     {
-        
+
         std::vector<cv::DMatch> matches;
         feature.match(frame1.descriptors, frame2.descriptors, matches);
         std::vector<cv::Point3d> matchedPoints3D_1;
@@ -46,7 +46,7 @@ namespace VO
             int queryIdx = matches[i].queryIdx;
             int trainIdx = matches[i].trainIdx;
             double distance = cv::norm(frame1.points3D[queryIdx] - frame2.points3D[trainIdx]);
-            if(distance > 5.0)
+            if (distance > 100.0)
             {
                 continue;
             }
@@ -54,51 +54,44 @@ namespace VO
             matchedPoints2D_2.push_back(frame2.keyPoints[trainIdx]);
         }
 
-        //std::cout << "matched point size : " << matchedPoints2D_2.size() << std::endl;
         cv::Mat rvec, tvec;
         try
         {
-            cv::solvePnP(matchedPoints3D_1, matchedPoints2D_2, cameraMatrix, cv::Mat(), rvec, tvec);
+            cv::solvePnPRansac(matchedPoints3D_1, matchedPoints2D_2, cameraMatrix, cv::Mat(), rvec, tvec, 3.0);
         }
         catch (cv::Exception &e)
         {
             std::cerr << " solvePnP Error : " << e.what() << std::endl;
             frame2.pose = frame1.relativePose.clone() * frame1.pose.clone();
-            frame2.relativePose(cv::Rect(3, 0, 1, 3)) = frame1.relativePose(cv::Rect(3, 0, 1, 3)).clone();
             return -1;
         }
 
         double translationSum = 0.0;
-        for(int i = 0; i < 3; i++)
+        for (int i = 0; i < 3; i++)
         {
             translationSum += tvec.at<double>(i) * tvec.at<double>(i);
         }
-        if(translationSum > 30.0)
+        if (translationSum > 100.0)
         {
             frame2.pose = frame1.relativePose.clone() * frame1.pose.clone();
-            frame2.relativePose(cv::Rect(3, 0, 1, 3)) = frame1.relativePose(cv::Rect(3, 0, 1, 3)).clone();
-            
             return -1;
         }
 
         cv::Mat rotationMatrix;
         cv::Rodrigues(rvec, rotationMatrix);
         double trace = cv::trace(rotationMatrix.t())[0];
-        if(trace < 0)
+        if (trace < 0.0)
         {
             frame2.pose = frame1.relativePose.clone() * frame1.pose.clone();
-            frame2.relativePose(cv::Rect(3, 0, 1, 3)) = frame1.relativePose(cv::Rect(3, 0, 1, 3)).clone();
             return -1;
         }
         cv::Mat relativePose = cv::Mat::eye(4, 4, CV_64F);
         rotationMatrix = rotationMatrix.t();
-        tvec = -rotationMatrix*tvec;
+        tvec = -rotationMatrix * tvec;
         rotationMatrix.copyTo(relativePose(cv::Rect(0, 0, 3, 3)));
         tvec.copyTo(relativePose(cv::Rect(3, 0, 1, 3)));
-        frame2.pose = frame1.pose.clone() * relativePose.clone();
-        frame2.relativePose = relativePose.clone();
-        std::cout << "rela pose : " <<  relativePose << std::endl;
-        
+        relativePose.copyTo(frame2.relativePose);
+        frame2.pose = frame1.pose.clone() * frame2.relativePose;
         return 0;
     }
 

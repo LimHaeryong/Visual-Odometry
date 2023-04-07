@@ -18,15 +18,15 @@ namespace VO
     class MotionEstimation
     {
     public:
-        MotionEstimation(const std::string& calibPath);
+        MotionEstimation(const std::string &calibPath);
         virtual ~MotionEstimation();
 
-        int motionEstimate(const Frame& frame1, Frame& frame2);
+        int motionEstimate(const Frame &frame1, Frame &frame2);
+
     private:
         Feature feature;
         cv::Mat cameraMatrix;
     };
-
 
 };
 
