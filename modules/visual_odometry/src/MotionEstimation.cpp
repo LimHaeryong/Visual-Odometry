@@ -45,6 +45,11 @@ namespace VO
         {
             int queryIdx = matches[i].queryIdx;
             int trainIdx = matches[i].trainIdx;
+            double distance = cv::norm(frame1.points3D[queryIdx] - frame2.points3D[trainIdx]);
+            if(distance > 5.0)
+            {
+                continue;
+            }
             matchedPoints3D_1.push_back(frame1.points3D[queryIdx]);
             matchedPoints2D_2.push_back(frame2.keyPoints[trainIdx]);
         }
@@ -58,8 +63,8 @@ namespace VO
         catch (cv::Exception &e)
         {
             std::cerr << " solvePnP Error : " << e.what() << std::endl;
-            frame2.relativePose = frame1.relativePose.clone();
-            frame2.pose = frame2.relativePose*frame1.pose.clone();
+            frame2.pose = frame1.relativePose.clone() * frame1.pose.clone();
+            frame2.relativePose(cv::Rect(3, 0, 1, 3)) = frame1.relativePose(cv::Rect(3, 0, 1, 3)).clone();
             return -1;
         }
 
@@ -68,32 +73,32 @@ namespace VO
         {
             translationSum += tvec.at<double>(i) * tvec.at<double>(i);
         }
-        if(translationSum > 10.0)
+        if(translationSum > 30.0)
         {
-            frame2.relativePose = frame1.relativePose.clone();
-            frame2.pose = frame2.relativePose*frame1.pose.clone();
+            frame2.pose = frame1.relativePose.clone() * frame1.pose.clone();
+            frame2.relativePose(cv::Rect(3, 0, 1, 3)) = frame1.relativePose(cv::Rect(3, 0, 1, 3)).clone();
+            
             return -1;
         }
-        // std::vector<cv::Vec6d> cameras(2);
-        // cameras[0] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-        // cameras[1] = (rvec.at<double>(0), rvec.at<double>(1), rvec.at<double>(2), tvec.at<double>(0), tvec.at<double>(1), tvec.at<double>(2));
 
         cv::Mat rotationMatrix;
         cv::Rodrigues(rvec, rotationMatrix);
+        double trace = cv::trace(rotationMatrix.t())[0];
+        if(trace < 0)
+        {
+            frame2.pose = frame1.relativePose.clone() * frame1.pose.clone();
+            frame2.relativePose(cv::Rect(3, 0, 1, 3)) = frame1.relativePose(cv::Rect(3, 0, 1, 3)).clone();
+            return -1;
+        }
         cv::Mat relativePose = cv::Mat::eye(4, 4, CV_64F);
+        rotationMatrix = rotationMatrix.t();
+        tvec = -rotationMatrix*tvec;
         rotationMatrix.copyTo(relativePose(cv::Rect(0, 0, 3, 3)));
         tvec.copyTo(relativePose(cv::Rect(3, 0, 1, 3)));
-        //std::cout << "relative pose : " << relativePose << std::endl;
         frame2.pose = frame1.pose.clone() * relativePose.clone();
-        // ceres::Problem ba;
-
-        // for (int i = 0; i < matches.size(); ++i)
-        // {
-        //     ceres::CostFunction *costFunc = ReprojectionError::create(matchedPoints2D_2[i], cameraMatrix.at<double>(0, 0), cv::Point2d(cameraMatrix.at<double>(0, 2), cameraMatrix.at<double>(1, 2)));
-        //     double* camera = (double*)(&(cameras[1]));
-        //     double* X = (double*)(&(matchedPoints3D_1[i]));
-        //     ba.AddResidualBlock(costFunc, NULL, camera, X);
-        // }
+        frame2.relativePose = relativePose.clone();
+        std::cout << "rela pose : " <<  relativePose << std::endl;
+        
         return 0;
     }
 

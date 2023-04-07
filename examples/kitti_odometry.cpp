@@ -1,4 +1,6 @@
 #include <vector>
+#include <fstream>
+#include <sstream>
 #include <iostream>
 #include <cmath>
 
@@ -10,10 +12,16 @@
 int main()
 {
     cv::Mat imageLeft, imageRight;
+    cv::Mat resultImage(500, 500, CV_8UC3, cv::Scalar(0, 0, 0));
+    cv::putText(resultImage, "Ground Truth", cv::Point(0, 400), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1, cv::LINE_AA);
+    cv::putText(resultImage, "Result", cv::Point(0, 450), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
 
-    std::string imageLeftPath = "../resources/00/image_0/";
-    std::string imageRightPath = "../resources/00/image_1/";
-    std::string calibPath = "../resources/00/calib.txt";
+    std::string scene = "00";
+    std::string imageLeftPath = "../resources/sequences/" + scene + "/image_0/";
+    std::string imageRightPath = "../resources/sequences/" + scene + "/image_1/";
+    std::string calibPath = "../resources/sequences/" + scene + "/calib.txt";
+    std::string posePath = "../resources/poses/" + scene + ".txt";
+    double value;
 
     std::string frameCountStr;
     std::string fileName;
@@ -30,7 +38,16 @@ int main()
     framePrev = triangulation.triangulate(imageLeft, imageRight);
 
     std::cout << framePrev.pose << std::endl;
-    while (true)
+
+    std::ifstream ifs(posePath);
+    std::string line;
+    if (!ifs.is_open())
+    {
+        std::cout << "cannot open posePath : " << posePath << std::endl;
+    }
+    std::getline(ifs, line);
+
+    while (std::getline(ifs, line))
     {
         frameCountStr.clear();
         fileName.clear();
@@ -41,13 +58,29 @@ int main()
         imageLeft = cv::imread(imageLeftPath + fileName, cv::IMREAD_GRAYSCALE);
         imageRight = cv::imread(imageRightPath + fileName, cv::IMREAD_GRAYSCALE);
 
-
         frameCurrent = triangulation.triangulate(imageLeft, imageRight);
 
         int ret = motionEstimation.motionEstimate(framePrev, frameCurrent);
         std::cout << frameCurrent.pose << std::endl;
+        int x = static_cast<int>((frameCurrent.pose.at<double>(0, 3) + 500.0) / 2.0);
+        int z = static_cast<int>(-(frameCurrent.pose.at<double>(2, 3) - 500.0) / 2.0);
+
+        cv::circle(resultImage, cv::Point(x, z), 1, cv::Scalar(0, 255, 0), cv::FILLED);
+
+        double xPose, zPose;
+        std::stringstream ss(line);
+        ss >> value >> value >> value >> xPose >> value >> value >> value >> value >> value >> value >> value >> zPose;
+
+        int xPoseInt = static_cast<int>((xPose + 500.0) / 2.0);
+        int zPoseInt = static_cast<int>(-(zPose - 500.0) / 2.0);
+        cv::circle(resultImage, cv::Point(xPoseInt, zPoseInt), 1, cv::Scalar(0, 0, 255), cv::FILLED);
         framePrev = frameCurrent;
+
+        cv::imshow("result", resultImage);
+        cv::waitKey(1);
     }
+
+    cv::imwrite("scene" + scene + "_result.jpg", resultImage);
 
     return 0;
 }

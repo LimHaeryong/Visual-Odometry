@@ -63,7 +63,7 @@ namespace VO
             int queryIdx = matches[i].queryIdx;
             cv::Point2d left = keyPointLeft[queryIdx].pt;
             cv::Point2d right = keyPointRight[matches[i].trainIdx].pt;
-            if(std::abs(left.y - right.y) > 5)
+            if(std::abs(left.y - right.y) > 10.0)
             {
                 continue;
             }
