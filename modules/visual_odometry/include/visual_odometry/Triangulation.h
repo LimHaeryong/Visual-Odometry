@@ -24,6 +24,7 @@ namespace VO
         Feature feature;
         cv::Mat projectionLeft;
         cv::Mat projectionRight;
+        double baseline;
 
     };
 };

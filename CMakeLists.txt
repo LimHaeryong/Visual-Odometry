@@ -10,8 +10,3 @@ add_executable(kitti_odometry examples/kitti_odometry.cpp)
 target_link_libraries(kitti_odometry PRIVATE
     visual_odometry_module
 )
-
-add_executable(testing examples/testing.cpp)
-target_link_libraries(testing PRIVATE
-    visual_odometry_module
-)

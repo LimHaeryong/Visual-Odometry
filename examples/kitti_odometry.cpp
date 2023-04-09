@@ -61,9 +61,14 @@ int main()
         frameCurrent = triangulation.triangulate(imageLeft, imageRight);
 
         int ret = motionEstimation.motionEstimate(framePrev, frameCurrent);
-        std::cout << frameCurrent.pose << std::endl;
-        int x = static_cast<int>(frameCurrent.pose.at<double>(0, 3) / 0.3 + 750.0);
-        int z = static_cast<int>(-frameCurrent.pose.at<double>(2, 3) / 0.3 + 600.0);
+        if (ret != -1)
+        {
+            framePrev = frameCurrent;
+        }
+        std::cout << framePrev.pose << std::endl;
+
+        int x = static_cast<int>(framePrev.pose.at<double>(0, 3) / 0.3 + 750.0);
+        int z = static_cast<int>(-framePrev.pose.at<double>(2, 3) / 0.3 + 600.0);
 
         cv::circle(resultImage, cv::Point(x, z), 1, cv::Scalar(0, 255, 0), cv::FILLED);
 
@@ -74,7 +79,6 @@ int main()
         int xPoseInt = static_cast<int>(xPose / 0.3 + 750.0);
         int zPoseInt = static_cast<int>(-zPose / 0.3 + 600.0);
         cv::circle(resultImage, cv::Point(xPoseInt, zPoseInt), 1, cv::Scalar(0, 0, 255), cv::FILLED);
-        framePrev = frameCurrent;
 
         cv::imshow("result", resultImage);
         cv::waitKey(1);

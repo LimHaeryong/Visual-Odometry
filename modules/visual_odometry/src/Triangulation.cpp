@@ -36,6 +36,15 @@ namespace VO
             }
         }
         ifs.close();
+
+        cv::Mat K1, R1, t, K2, R2;
+        cv::decomposeProjectionMatrix(projectionLeft, K1, R1, t);
+        cv::decomposeProjectionMatrix(projectionRight, K2, R2, t);
+
+        cv::Mat translation;
+        translation = K1.inv() * projectionLeft(cv::Rect(3, 0, 1, 3)) - K2.inv() * projectionRight(cv::Rect(3, 0, 1, 3));
+
+        baseline = cv::norm(cv::Point3d(translation));
     }
 
     Triangulation::~Triangulation()
@@ -53,41 +62,52 @@ namespace VO
         std::vector<cv::DMatch> matches;
         feature.match(descriptorLeft, descriptorRight, matches);
         int matchSize = matches.size();
-        std::vector<cv::Point2d> matchedKeyPointRight;
-        matchedKeyPointRight.reserve(matchSize);
-        frame.keyPoints.reserve(matchSize);
-        frame.descriptors.reserve(matchSize);
-        int max_diff = 0;
+        std::vector<cv::Point2d> matchedKeyPointsLeft, matchedKeyPointsRight;
+        cv::Mat matchedDescriptorsLeft;
+        matchedKeyPointsLeft.reserve(matchSize);
+        matchedKeyPointsRight.reserve(matchSize);
+        matchedDescriptorsLeft.reserve(matchSize);
+
+
         for (int i = 0; i < matchSize; ++i)
         {
             int queryIdx = matches[i].queryIdx;
-            cv::Point2d left = keyPointLeft[queryIdx].pt;
-            cv::Point2d right = keyPointRight[matches[i].trainIdx].pt;
-            if(std::abs(left.y - right.y) > 10.0)
+            cv::Point2d leftPoint = keyPointLeft[queryIdx].pt;
+            cv::Point2d rightPoint = keyPointRight[matches[i].trainIdx].pt;
+            if(std::abs(leftPoint.y - rightPoint.y) > 10.0)
             {
                 continue;
             }
-            frame.keyPoints.push_back(left);
-            frame.descriptors.push_back(descriptorLeft.row(queryIdx));
-            matchedKeyPointRight.push_back(right);
+            matchedDescriptorsLeft.push_back(descriptorLeft.row(queryIdx));
+            matchedKeyPointsLeft.push_back(leftPoint);
+            matchedKeyPointsRight.push_back(rightPoint);
         }
 
         cv::Mat triangulatedPoints;
-        cv::triangulatePoints(projectionLeft, projectionRight, frame.keyPoints, matchedKeyPointRight, triangulatedPoints);
+        cv::triangulatePoints(projectionLeft, projectionRight, matchedKeyPointsLeft, matchedKeyPointsRight, triangulatedPoints);
 
         frame.points3D.reserve(matchSize);
-        for(int i = 0; i < matchSize; ++i)
+        frame.keyPoints.reserve(matchSize);
+        frame.descriptors.reserve(matchSize);
+        for(int i = 0; i < triangulatedPoints.cols; ++i)
         {
             cv::Point3d point3D;
             double w = triangulatedPoints.at<double>(3, i);
             point3D.x = triangulatedPoints.at<double>(0, i) / w;
             point3D.y = triangulatedPoints.at<double>(1, i) / w;
             point3D.z = triangulatedPoints.at<double>(2, i) / w;
+            if(cv::norm(point3D) > baseline * 1000.0)
+            {
+                continue;
+            }
+            frame.keyPoints.push_back(matchedKeyPointsLeft[i]);
+            frame.descriptors.push_back(matchedDescriptorsLeft.row(i));
             frame.points3D.push_back(point3D);
         }
 
         frame.pose = cv::Mat::eye(4, 4, CV_64F);
         frame.relativePose = cv::Mat::eye(4, 4, CV_64F);
+        std::cout << frame.descriptors.rows << frame.points3D.size() << frame.keyPoints.size() << std::endl;
         return frame;
     }
 };
