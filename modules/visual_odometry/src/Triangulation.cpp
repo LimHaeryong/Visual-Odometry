@@ -96,7 +96,7 @@ namespace VO
             point3D.x = triangulatedPoints.at<double>(0, i) / w;
             point3D.y = triangulatedPoints.at<double>(1, i) / w;
             point3D.z = triangulatedPoints.at<double>(2, i) / w;
-            if(cv::norm(point3D) > baseline * 1000.0)
+            if(cv::norm(point3D) > baseline * 150.0)
             {
                 continue;
             }
@@ -104,10 +104,10 @@ namespace VO
             frame.descriptors.push_back(matchedDescriptorsLeft.row(i));
             frame.points3D.push_back(point3D);
         }
-
+        
         frame.pose = cv::Mat::eye(4, 4, CV_64F);
         frame.relativePose = cv::Mat::eye(4, 4, CV_64F);
-        std::cout << frame.descriptors.rows << frame.points3D.size() << frame.keyPoints.size() << std::endl;
+
         return frame;
     }
 };
