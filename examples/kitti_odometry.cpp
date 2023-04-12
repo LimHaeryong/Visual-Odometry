@@ -1,8 +1,9 @@
-#include <vector>
+#include <chrono>
+#include <cmath>
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include <cmath>
+#include <vector>
 
 #include "visual_odometry/Type.h"
 #include "visual_odometry/Feature.h"
@@ -37,7 +38,7 @@ int main()
     VO::Frame framePrev, frameCurrent;
     framePrev = triangulation.triangulate(imageLeft, imageRight);
 
-    std::cout << framePrev.pose << std::endl;
+    std::cout << framePrev.pose << "\n";
 
     std::ifstream ifs(posePath);
     std::string line;
@@ -49,6 +50,8 @@ int main()
 
     while (std::getline(ifs, line))
     {
+        std::chrono::system_clock::time_point StartTime = std::chrono::system_clock::now();
+
         frameCountStr.clear();
         fileName.clear();
         frameCountStr = std::to_string(frameCount);
@@ -65,7 +68,10 @@ int main()
         {
             framePrev = frameCurrent;
         }
-        std::cout << framePrev.pose << std::endl;
+        std::cout << framePrev.pose << "\n";
+
+        std::chrono::system_clock::time_point EndTime = std::chrono::system_clock::now();
+        std::cout << "elapsed time(milliseconds) : " << std::chrono::duration_cast<std::chrono::milliseconds>(EndTime - StartTime).count() << "\n";
 
         int x = static_cast<int>(framePrev.pose.at<double>(0, 3) / 0.3 + 750.0);
         int z = static_cast<int>(-framePrev.pose.at<double>(2, 3) / 0.3 + 600.0);

@@ -60,7 +60,8 @@ namespace VO
         feature.detectAndCompute(imageRight, keyPointRight, descriptorRight);
 
         std::vector<cv::DMatch> matches;
-        feature.match(descriptorLeft, descriptorRight, matches);
+        //feature.match(descriptorLeft, descriptorRight, matches);
+        feature.stereoMatch(keyPointLeft, descriptorLeft, keyPointRight, descriptorRight, matches);
         int matchSize = matches.size();
         std::vector<cv::Point2d> matchedKeyPointsLeft, matchedKeyPointsRight;
         cv::Mat matchedDescriptorsLeft;
@@ -107,7 +108,13 @@ namespace VO
         
         frame.pose = cv::Mat::eye(4, 4, CV_64F);
         frame.relativePose = cv::Mat::eye(4, 4, CV_64F);
+        frame.unmatchedIndices.reserve(matchSize);
 
+        for(uint i = 0; i < matchSize; ++i)
+        {
+            frame.unmatchedIndices.insert(i);
+        }
+        
         return frame;
     }
 };

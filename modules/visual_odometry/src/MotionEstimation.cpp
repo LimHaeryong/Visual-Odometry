@@ -53,6 +53,7 @@ namespace VO
             }
             matchedPoints3D_1.push_back(frame1.points3D[queryIdx]);
             matchedPoints2D_2.push_back(frame2.keyPoints[trainIdx]);
+            frame2.unmatchedIndices.erase(trainIdx);
         }
 
         cv::Mat rvec, tvec;
@@ -63,8 +64,8 @@ namespace VO
         catch (cv::Exception &e)
         {
             std::cerr << " solvePnP Error : " << e.what() << std::endl;
-            frame2.relativePose = frame1.relativePose.clone();
-            frame2.pose = frame2.relativePose * frame1.pose.clone();
+            //frame2.relativePose = frame1.relativePose.clone();
+            frame2.pose = frame1.pose.clone() * frame2.relativePose;
             return -2;
         }
 
@@ -75,8 +76,8 @@ namespace VO
         }
         if (translationSum > 100.0)
         {
-            frame2.relativePose = frame1.relativePose.clone();
-            frame2.pose = frame2.relativePose * frame1.pose.clone();
+            //frame2.relativePose = frame1.relativePose.clone();
+            frame2.pose = frame1.pose.clone() * frame2.relativePose;
             return -1;
         }
         
@@ -85,8 +86,8 @@ namespace VO
         double trace = cv::trace(rotationMatrix.t())[0];
         if (trace < 0.0)
         {
-            frame2.relativePose = frame1.relativePose.clone();
-            frame2.pose = frame2.relativePose * frame1.pose.clone();
+            //frame2.relativePose = frame1.relativePose.clone();
+            frame2.pose = frame1.pose.clone() * frame2.relativePose;
             return -1;
         }
         cv::Mat relativePose = cv::Mat::eye(4, 4, CV_64F);

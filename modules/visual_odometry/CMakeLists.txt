@@ -8,6 +8,7 @@ set(VISUAL_ODOMETRY_SOURCE_FILES
     src/Feature.cpp
     src/MotionEstimation.cpp
     src/Triangulation.cpp
+    src/Tracking.cpp
 )
 
 add_library(visual_odometry_module
@@ -35,6 +36,12 @@ if(Ceres_FOUND)
     set(CERES_LIBS Ceres::ceres)
 endif()
 
+find_package(OpenMP REQUIRED)
+if(OpenMP_CXX_FOUND)
+    message(STATUS "OpenMP Found!")
+    set(OpenMP_LIBS OpenMP::OpenMP_CXX)
+endif()
+
 target_include_directories(visual_odometry_module PUBLIC
     include
     ${OpenCV_INCLUDE_DIRS}
@@ -46,4 +53,5 @@ target_link_libraries(visual_odometry_module PUBLIC
     ${OpenCV_LIBS}
     ${Eigen3_LIBS}
     ${CERES_LIBS}
+    ${OpenMP_LIBS}
 )
