@@ -56,10 +56,20 @@ namespace VO
             frame2.unmatchedIndices.erase(trainIdx);
         }
 
-        cv::Mat rvec, tvec;
+        cv::Mat rvec, tvec, inliers;
         try
         {
-            cv::solvePnPRansac(matchedPoints3D_1, matchedPoints2D_2, cameraMatrix, cv::Mat(), rvec, tvec, 10.0);
+            cv::solvePnPRansac(matchedPoints3D_1, matchedPoints2D_2, cameraMatrix, cv::Mat(), rvec, tvec, false, 100, 4.0f, 0.99, inliers);
+            std::vector<cv::Point3d> inlierPoints3D(inliers.rows);
+            std::vector<cv::Point2d> inlierPoints2D(inliers.rows);
+
+            for(int i = 0; i < inliers.rows; ++i)
+            {
+                int idx = inliers.at<int>(i);
+                inlierPoints3D[i] = matchedPoints3D_1[idx];
+                inlierPoints2D[i] = matchedPoints2D_2[idx];
+            }
+            cv::solvePnPRefineLM(inlierPoints3D, inlierPoints2D, cameraMatrix, cv::Mat(), rvec, tvec);
         }
         catch (cv::Exception &e)
         {

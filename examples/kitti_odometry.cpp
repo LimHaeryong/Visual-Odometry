@@ -16,6 +16,9 @@ int main()
     cv::Mat resultImage(1000, 1000, CV_8UC3, cv::Scalar(0, 0, 0));
     cv::putText(resultImage, "Ground Truth", cv::Point(100, 50), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1, cv::LINE_AA);
     cv::putText(resultImage, "Result", cv::Point(100, 100), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
+    const double resultScale = 0.3;
+    const double resultCx = 750.0;
+    const double resultCz = 600.0;
 
     std::string scene = "07";
     std::string imageLeftPath = "../resources/sequences/" + scene + "/image_0/";
@@ -73,8 +76,8 @@ int main()
         std::chrono::system_clock::time_point EndTime = std::chrono::system_clock::now();
         std::cout << "elapsed time(milliseconds) : " << std::chrono::duration_cast<std::chrono::milliseconds>(EndTime - StartTime).count() << "\n";
 
-        int x = static_cast<int>(framePrev.pose.at<double>(0, 3) / 0.3 + 750.0);
-        int z = static_cast<int>(-framePrev.pose.at<double>(2, 3) / 0.3 + 600.0);
+        int x = static_cast<int>(framePrev.pose.at<double>(0, 3) / resultScale + resultCx);
+        int z = static_cast<int>(-framePrev.pose.at<double>(2, 3) / resultScale + resultCz);
 
         cv::circle(resultImage, cv::Point(x, z), 1, cv::Scalar(0, 255, 0), cv::FILLED);
 
@@ -82,15 +85,15 @@ int main()
         std::stringstream ss(line);
         ss >> value >> value >> value >> xPose >> value >> value >> value >> value >> value >> value >> value >> zPose;
 
-        int xPoseInt = static_cast<int>(xPose / 0.3 + 750.0);
-        int zPoseInt = static_cast<int>(-zPose / 0.3 + 600.0);
+        int xPoseInt = static_cast<int>(xPose / resultScale + resultCx);
+        int zPoseInt = static_cast<int>(-zPose / resultScale + resultCz);
         cv::circle(resultImage, cv::Point(xPoseInt, zPoseInt), 1, cv::Scalar(0, 0, 255), cv::FILLED);
 
         cv::imshow("result", resultImage);
         cv::waitKey(1);
     }
 
-    cv::imwrite("../result/scene" + scene + "_result.jpg", resultImage);
+    cv::imwrite("../build/scene" + scene + "_result.jpg", resultImage);
 
     return 0;
 }
