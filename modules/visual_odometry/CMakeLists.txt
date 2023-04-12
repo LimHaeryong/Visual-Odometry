@@ -8,7 +8,6 @@ set(VISUAL_ODOMETRY_SOURCE_FILES
     src/Feature.cpp
     src/MotionEstimation.cpp
     src/Triangulation.cpp
-    src/Tracking.cpp
 )
 
 add_library(visual_odometry_module
