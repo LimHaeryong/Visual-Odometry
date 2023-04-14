@@ -20,7 +20,7 @@ To achieve this, stereo matching through the epipolar line is implemented to fin
 
 This part is referred to the algorithms of ORB-SLAM2 and stella_vslam. 
 
-Then, the cv::TriangulatePoints function with the DLT algorithm is used to compute the 3D positions of the feature points.
+Then, the cv::TriangulatePoints function is used to compute the 3D positions of the feature points.
 
 ### 3. MotionEstimation
 The final step is to estimate the camera motion using the 3D feature points obtained from triangulation. 
