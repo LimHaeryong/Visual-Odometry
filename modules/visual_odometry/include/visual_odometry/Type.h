@@ -1,6 +1,7 @@
 #ifndef TYPE_H_
 #define TYPE_H_
 
+#include <deque>
 #include <unordered_set>
 #include <vector>
 
@@ -15,7 +16,7 @@ namespace VO
         std::vector<cv::Point3d> points3D;
         cv::Mat pose;
         cv::Mat relativePose;
-        std::unordered_set<uint> unmatchedIndices;
+        std::vector<std::vector<cv::DMatch>> matchesWithKeyFrames;
     };
 };
 

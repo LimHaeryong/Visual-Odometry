@@ -108,12 +108,6 @@ namespace VO
         
         frame.pose = cv::Mat::eye(4, 4, CV_64F);
         frame.relativePose = cv::Mat::eye(4, 4, CV_64F);
-        frame.unmatchedIndices.reserve(matchSize);
-
-        for(uint i = 0; i < matchSize; ++i)
-        {
-            frame.unmatchedIndices.insert(i);
-        }
         
         return frame;
     }

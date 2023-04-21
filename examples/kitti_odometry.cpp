@@ -9,6 +9,7 @@
 #include "visual_odometry/Feature.h"
 #include "visual_odometry/Triangulation.h"
 #include "visual_odometry/MotionEstimation.h"
+#include "visual_odometry/LocalMap.h"
 
 int main()
 {
@@ -35,13 +36,14 @@ int main()
 
     imageLeft = cv::imread(imageLeftPath + fileName, cv::IMREAD_GRAYSCALE);
     imageRight = cv::imread(imageRightPath + fileName, cv::IMREAD_GRAYSCALE);
+
     VO::Triangulation triangulation = VO::Triangulation(calibPath);
     VO::MotionEstimation motionEstimation = VO::MotionEstimation(calibPath);
+    VO::LocalMap localMap = VO::LocalMap();
 
-    VO::Frame framePrev, frameCurrent;
-    framePrev = triangulation.triangulate(imageLeft, imageRight);
-
-    std::cout << framePrev.pose << "\n";
+    VO::Frame frameCurrent;
+    frameCurrent = triangulation.triangulate(imageLeft, imageRight);
+    localMap.addKeyFrame(frameCurrent);
 
     std::ifstream ifs(posePath);
     std::string line;
@@ -66,18 +68,20 @@ int main()
 
         frameCurrent = triangulation.triangulate(imageLeft, imageRight);
 
-        int ret = motionEstimation.motionEstimate(framePrev, frameCurrent);
-        if (ret != -1)
+        int ret = motionEstimation.motionEstimate(localMap.getCurrentKeyFrame(), frameCurrent);
+        std::cout << frameCurrent.pose << "\n";
+
+        if (ret == 0)
         {
-            framePrev = frameCurrent;
+            localMap.addKeyFrame(frameCurrent);
+            localMap.optimize();
         }
-        std::cout << framePrev.pose << "\n";
 
         std::chrono::system_clock::time_point EndTime = std::chrono::system_clock::now();
         std::cout << "elapsed time(milliseconds) : " << std::chrono::duration_cast<std::chrono::milliseconds>(EndTime - StartTime).count() << "\n";
 
-        int x = static_cast<int>(framePrev.pose.at<double>(0, 3) / resultScale + resultCx);
-        int z = static_cast<int>(-framePrev.pose.at<double>(2, 3) / resultScale + resultCz);
+        int x = static_cast<int>(frameCurrent.pose.at<double>(0, 3) / resultScale + resultCx);
+        int z = static_cast<int>(-frameCurrent.pose.at<double>(2, 3) / resultScale + resultCz);
 
         cv::circle(resultImage, cv::Point(x, z), 1, cv::Scalar(0, 255, 0), cv::FILLED);
 
