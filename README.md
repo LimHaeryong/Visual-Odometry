@@ -1,6 +1,8 @@
 # Visual-Odometry
 This is an implementation of feature-based stereo Visual Odometry. 
 
+![](./resources/VO_flowchart.png)
+
 The pipeline consists of three main steps: feature extraction, triangulation, and motion estimation.
 
 ## Pipeline
